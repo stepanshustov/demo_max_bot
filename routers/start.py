@@ -1,6 +1,6 @@
 from maxapi import F, Router
 from maxapi.enums.format import Format
-from maxapi.filters.command import CommandStart
+from maxapi.filters.command import CommandStart, Command
 from maxapi.types import BotStarted, MessageCreated
 
 
@@ -11,7 +11,7 @@ router = Router(router_id="start")
 
 @router.bot_started()
 async def on_bot_started(event: BotStarted):
-    """События создания чата с ботом, до команды /start"""
+    """Event handler for bot started, before the command /start"""
     pass
 
 @router.message_created(CommandStart)
