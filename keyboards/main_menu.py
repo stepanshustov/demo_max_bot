@@ -1,7 +1,7 @@
 from maxapi.types.attachments.buttons import CallbackButton
 from maxapi.utils.inline_keyboard import InlineKeyboardBuilder
 
-from calbacks import MenuPayload
+from callbacks import MenuPayload
 
 
 async def get_main_keyboard():
