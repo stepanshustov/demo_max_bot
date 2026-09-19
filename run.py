@@ -3,7 +3,9 @@ import asyncio
 import logging
 from maxapi import Bot, Dispatcher
 from maxapi.types import Message, MessageCreated, Command
+
 from config import MAX_BOT_TOKEN
+from routers import router
 
 logging.basicConfig(level=logging.INFO)
 
@@ -12,6 +14,7 @@ dp = Dispatcher()
 
 
 async def main():
+    dp.include_routers(router)
     await dp.start_polling(bot)
 
 
