@@ -1,6 +1,5 @@
 from maxapi.types.attachments.buttons import CallbackButton
 from maxapi.utils.inline_keyboard import InlineKeyboardBuilder
-
 from callbacks import MenuPayload
 
 
