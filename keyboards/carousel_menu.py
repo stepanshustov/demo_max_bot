@@ -38,7 +38,3 @@ async def get_carousel_keyboard(number_page: int) -> AttachmentButton:
         )
     )
     return keyboard.as_markup()
-
-
-for i in range(1, 4):
-    print(get_numbers_of_texts(i))
