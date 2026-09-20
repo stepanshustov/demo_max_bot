@@ -3,7 +3,7 @@ from maxapi.enums.format import Format
 from maxapi.filters.command import CommandStart, Command
 from maxapi.types import BotStarted, MessageCreated
 
-from texts import HELLO_TEXT
+from texts import hello
 from keyboards import get_main_keyboard
 
 router = Router(router_id="start")
@@ -17,4 +17,4 @@ async def on_bot_started(event: BotStarted):
 
 @router.message_created(Command('start'))
 async def start_command(event: MessageCreated):
-    await event.message.answer(HELLO_TEXT.text, attachments=[await get_main_keyboard()])
+    await event.message.answer(hello.text, attachments=[await get_main_keyboard()])
