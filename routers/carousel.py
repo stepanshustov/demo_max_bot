@@ -24,7 +24,6 @@ async def start_carousel(event: MessageCallback):
 
 @router.message_callback(CarouselPayload.filter())
 async def main_carousel(event: MessageCallback, payload: CarouselPayload):
-    print(payload.action, payload.page)
     if event.message is None:
         return
     if payload.action == "to":
