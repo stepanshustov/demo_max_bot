@@ -9,4 +9,10 @@ async def get_main_keyboard():
     keyboard.row(
         CallbackButton(text="демо оставить заявку", payload=MenuPayload(action="form").pack())
     )
+    keyboard.row(
+        CallbackButton(text="демо карусель", payload=MenuPayload(action="carousel").pack())
+    )
+    keyboard.row(
+        CallbackButton(text="демо FAQ", payload=MenuPayload(action="faq").pack())
+    )
     return keyboard.as_markup()
