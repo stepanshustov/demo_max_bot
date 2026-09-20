@@ -1,1 +1,1 @@
-from .payloads import MenuPayload
+from .payloads import MenuPayload, CarouselPayload

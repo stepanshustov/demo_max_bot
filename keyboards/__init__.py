@@ -1,1 +1,2 @@
 from .main_menu import get_main_keyboard
+from .carousel_menu import get_carousel_keyboard

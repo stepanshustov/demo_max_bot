@@ -8,4 +8,5 @@ class MenuPayload(CallbackPayload, prefix="menu"):
 
 class CarouselPayload(CallbackPayload, prefix="carousel"):
     """Кнопки для карусели, хранит номер карточки к кторой нужно перейти или выбрать"""
-    action: str
+    action: str # to | select
+    page: int
