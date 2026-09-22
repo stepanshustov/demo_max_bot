@@ -21,9 +21,7 @@ async def get_carousel_keyboard(number_page: int) -> AttachmentButton:
             text="️Назад",
             payload=CarouselPayload(
                 action="to", page=get_numbers_of_texts(number_page - 1)).pack(),
-        )
-    )
-    keyboard.row(
+        ),
         CallbackButton(
             text="Вперёд",
             payload=CarouselPayload(
