@@ -1,0 +1,28 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  bot:
+    build: .
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - MAX_BOT_TOKEN=${MAX_BOT_TOKEN}
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./media:/app/media
+    restart: unless-stopped
+
+volumes:
+  redis_data:
