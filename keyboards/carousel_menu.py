@@ -15,6 +15,7 @@ def get_numbers_of_texts(n: int) -> int:
 
 async def get_carousel_keyboard(number_page: int) -> AttachmentButton:
     """Создает клавиатуру с кнопками навигации по карточкам."""
+    # print("ffffffffffff")
     keyboard = InlineKeyboardBuilder()
     keyboard.row(
         CallbackButton(
