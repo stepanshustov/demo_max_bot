@@ -42,4 +42,6 @@ async def main_carousel_select(event: MessageCallback, payload: CarouselPayload)
     if event.message is None:
         return
     if payload.action == "select":
-        await event.message.answer(text=f"Вы выбрали товар номер {payload.page}")
+        await event.message.answer(
+            text=f"Вы выбрали товар номер {payload.page}\n"
+                 f"Администратор увидит об этом сообщение, или бот отправит эти данные еще куда-то при необходимости.")

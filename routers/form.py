@@ -47,4 +47,4 @@ async def process_phone(event: MessageCreated, context: MemoryContext):
     data = await context.get_data()
 
     await context.set_state(None)
-    await event.message.answer(f"Готово!\nИмя: {data['name']}\nТелефон: {data['phone']}")
+    await event.message.answer(f"Администратор получит заявку:!\nИмя: {data['name']}\nТелефон: {data['phone']}")
