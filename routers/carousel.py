@@ -18,9 +18,10 @@ def help_number_page_func(n: int):
 async def start_carousel(event: MessageCallback, payload: MenuPayload):
     if event.message is None:
         return
-    print(payload.action)
+    # print(payload.action
+    media = get_media_carousel(DEFAULT_PAGE)
     await event.message.answer(text=help_number_page_func(DEFAULT_PAGE) + CAROUSEL_TEXTS[DEFAULT_PAGE],
-                               attachments=[await get_carousel_keyboard(DEFAULT_PAGE)])
+                               attachments=[media, await get_carousel_keyboard(DEFAULT_PAGE)])
 
 
 @router.message_callback(CarouselPayload.filter())
