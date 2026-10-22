@@ -5,13 +5,12 @@ from maxapi.context import MemoryContext, StatesGroup, State
 from callbacks import MenuPayload, FaqPayload
 from keyboards import get_faq_delete_keyboard, get_faq_list_keyboard
 from texts.faq import FAQ_TEXTS
-from utils import CallbackDedup
+from utils import ThrottlingMiddleware
 
 router = Router(router_id="faq")
-depup = CallbackDedup()
 
 
-@router.message_callback(MenuPayload.filter(F.action == "faq"))
+@router.message_callback(MenuPayload.filter(F.action == "faq"), ThrottlingMiddleware(5))
 async def faq(event: MessageCallback, payload: MenuPayload):
     if event.message is None:
         return
@@ -20,16 +19,14 @@ async def faq(event: MessageCallback, payload: MenuPayload):
     )
 
 
-@router.message_callback(FaqPayload.filter(F.number_question == -1))
-@depup
+@router.message_callback(FaqPayload.filter(F.number_question == -1), ThrottlingMiddleware(0.1))
 async def faq_delete(event: MessageCallback, payload: FaqPayload):
     if event.message is None:
         return
     await event.message.delete()
 
 
-@router.message_callback(FaqPayload.filter(F.number_question != -1))
-@depup
+@router.message_callback(FaqPayload.filter(F.number_question != -1), ThrottlingMiddleware(2))
 async def faq_answer(event: MessageCallback, payload: FaqPayload):
     if event.message is None:
         return

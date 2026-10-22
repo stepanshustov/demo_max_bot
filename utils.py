@@ -1,73 +1,57 @@
-from functools import wraps
-from cachetools import TTLCache
-from dataclasses import fields, is_dataclass
-from typing import Any
+import time
+from typing import Any, Awaitable, Callable, Dict
+from maxapi.filters.middleware import BaseMiddleware
+from maxapi.types import UpdateUnion
+import re
+import phonenumbers
+
+# Разрешены буквы, пробел и дефис. От 2 до 64 символов.
+_NAME_RE = re.compile(r"^[А-Яа-яЁёA-Za-z][А-Яа-яЁёA-Za-z\-\s]{1,63}$")
 
 
-class CallbackDedup:
-    """Универсальный декоратор для дедупликации callback-действий.
+def validate_name(value: str) -> str:
+    """Возвращает имя с заглавными буквами или кидает ValueError."""
+    value = value.strip()
+    if not _NAME_RE.match(value):
+        raise ValueError("Имя должно содержать только буквы, пробел или дефис.")
+    return " ".join(word.capitalize() for word in value.split())
 
-    Кэширует комбинацию (message_id, параметры_действия), чтобы не выполнять
-    одно и то же действие несколько раз для одного сообщения.
-    Работает для любых кнопок и payload-типов.
-    """
 
-    def __init__(self, ttl: int | float = 30, maxsize: int = 1000):
-        self._cache = TTLCache(maxsize=maxsize, ttl=ttl)
+def validate_phone(value: str, region: str = "RU") -> str:
+    """Возвращает номер в формате E.164 (+7999...) или кидает ValueError."""
+    try:
+        num = phonenumbers.parse(value, region)
+    except phonenumbers.NumberParseException as exc:
+        raise ValueError("Не могу разобрать номер.") from exc
 
-    def _extract_payload_params(self, payload: Any) -> tuple:
-        """Извлекает все значимые параметры из payload для формирования ключа."""
-        if payload is None:
-            return ()
+    if not phonenumbers.is_valid_number(num):
+        raise ValueError("Номер недействителен.")
 
-        # Если payload - это dataclass (как в maxapi), извлекаем все поля
-        if is_dataclass(payload) and not isinstance(payload, type):
-            return tuple(getattr(payload, field.name) for field in fields(payload))
+    return phonenumbers.format_number(num, phonenumbers.PhoneNumberFormat.E164)
 
-        # Если payload - это dict
-        if isinstance(payload, dict):
-            return tuple(sorted(payload.items()))
 
-        # Если payload - это объект с атрибутами
-        if hasattr(payload, '__dict__'):
-            return tuple(sorted(
-                (k, v) for k, v in payload.__dict__.items()
-                if not k.startswith('_')
-            ))
+class ThrottlingMiddleware(BaseMiddleware):
+    def __init__(self, rate_limit: float = 1.0):
+        self.rate_limit = rate_limit  # Секунд между запросами
+        self.user_cache: Dict[int, float] = {}
 
-        # Иначе просто преобразуем в строку
-        return (str(payload),)
+    async def __call__(
+            self,
+            handler: Callable[[UpdateUnion, Dict[str, Any]], Awaitable[Any]],
+            event: UpdateUnion,
+            data: Dict[str, Any],
+    ) -> Any:
+        # Получаем ID пользователя и чата (как в FSM-контексте)
+        chat_id, user_id = event.get_ids()
 
-    def __call__(self, func):
-        @wraps(func)
-        async def wrapper(event, *args, **kwargs):
-            # Извлекаем message_id
-            message_id = None
-            if hasattr(event, 'message') and event.message is not None:
-                # В maxapi ID сообщения лежит в event.message.body.mid
-                if hasattr(event.message, 'body') and hasattr(event.message.body, 'mid'):
-                    message_id = event.message.body.mid
-                elif hasattr(event.message, 'mid'):
-                    message_id = event.message.mid
+        if user_id:
+            now = time.time()
+            last_time = self.user_cache.get(user_id, 0.0)
 
-            # Извлекаем payload (может быть в kwargs или в args)
-            payload = kwargs.get('payload')
-            if payload is None and len(args) > 1:
-                payload = args[1]  # Обычно payload идет вторым аргументом после event
+            # Если с прошлого сообщения прошло меньше rate_limit секунд — блокируем
+            if now - last_time < self.rate_limit:
+                return None  # Молча игнорируем (или можно отправить предупреждение)
 
-            if message_id is not None and payload is not None:
-                # Формируем ключ: (message_id, все_параметры_действия)
-                params = self._extract_payload_params(payload)
-                cache_key = (message_id, params)
+            self.user_cache[user_id] = now
 
-                if cache_key in self._cache:
-                    # Уже выполняли это действие для этого сообщения — игнорируем
-                    await event.answer()
-                    return None
-
-                # Запоминаем, что начали выполнять
-                self._cache[cache_key] = True
-
-            return await func(event, *args, **kwargs)
-
-        return wrapper
+        return await handler(event, data)

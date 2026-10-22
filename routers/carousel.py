@@ -6,20 +6,17 @@ from texts.carousel import CAROUSEL_TEXTS, DEFAULT_PAGE, NUMBERS_OF_TEXTS
 from callbacks import MenuPayload, CarouselPayload
 from keyboards import get_carousel_keyboard
 from media import get_media_carousel
-from utils import CallbackDedup
+from utils import ThrottlingMiddleware
 
 router = Router(router_id="carousel")
 
-dedup = CallbackDedup(ttl=2)
-dedup_to = CallbackDedup(ttl=0.2)
 
 # Строка префикс перед текстом карточки
 def help_number_page_func(n: int):
     return f"карточка: {n} из {NUMBERS_OF_TEXTS}\n"
 
 
-@router.message_callback(MenuPayload.filter(F.action == "carousel"))
-@dedup
+@router.message_callback(MenuPayload.filter(F.action == "carousel"), ThrottlingMiddleware(5))
 async def start_carousel(event: MessageCallback, payload: MenuPayload):
     if event.message is None:
         return
@@ -29,8 +26,7 @@ async def start_carousel(event: MessageCallback, payload: MenuPayload):
                                attachments=[media, await get_carousel_keyboard(DEFAULT_PAGE)])
 
 
-@router.message_callback(CarouselPayload.filter(F.action == "to"))
-@dedup_to
+@router.message_callback(CarouselPayload.filter(F.action == "to"), ThrottlingMiddleware(0.5))
 async def main_carousel_to(event: MessageCallback, payload: CarouselPayload):
     if event.message is None:
         return
@@ -41,9 +37,7 @@ async def main_carousel_to(event: MessageCallback, payload: CarouselPayload):
                              attachments=[media, await get_carousel_keyboard(payload.page)])
 
 
-
-@router.message_callback(CarouselPayload.filter(F.action == "select"))
-@dedup
+@router.message_callback(CarouselPayload.filter(F.action == "select"), ThrottlingMiddleware(1.2))
 async def main_carousel_select(event: MessageCallback, payload: CarouselPayload):
     if event.message is None:
         return
