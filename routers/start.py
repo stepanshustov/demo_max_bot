@@ -5,8 +5,10 @@ from maxapi.types import BotStarted, MessageCreated
 
 from texts.hello import HELLO_TEXT
 from keyboards import get_main_keyboard
+from utils import CallbackDedup
 
 router = Router(router_id="start")
+depup = CallbackDedup()
 
 
 @router.bot_started()
@@ -16,5 +18,6 @@ async def on_bot_started(event: BotStarted):
 
 
 @router.message_created(Command('start'))
+@depup
 async def start_command(event: MessageCreated):
     await event.message.answer(text=HELLO_TEXT, attachments=[await get_main_keyboard()])
